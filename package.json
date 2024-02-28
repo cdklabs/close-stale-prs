@@ -18,7 +18,6 @@
     "test:watch": "npx projen test:watch",
     "unbump": "npx projen unbump",
     "upgrade": "npx projen upgrade",
-    "upgrade-projen": "npx projen upgrade-projen",
     "watch": "npx projen watch",
     "projen": "npx projen"
   },
@@ -37,8 +36,10 @@
     "json-schema": "^0.4.0",
     "npm-check-updates": "^12",
     "projen": "^0.54.6",
+    "projen-github-action-typescript": "^0.0.395",
     "standard-version": "^9",
     "ts-jest": "^27.1.4",
+    "ts-node": "^9",
     "typescript": "^4.6.3"
   },
   "dependencies": {

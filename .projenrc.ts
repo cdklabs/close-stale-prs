@@ -1,9 +1,16 @@
-const { actions } = require('projen');
-const project = new actions.GitHubActionTypeScriptProject({
+import { GitHubActionTypeScriptProject, RunsUsing } from 'projen-github-action-typescript';
+
+const project = new GitHubActionTypeScriptProject({
+  projenrcTs: true,
   defaultReleaseBranch: 'main',
   name: 'close-stale-prs',
   deps: ['@octokit/graphql'],
-  metadata: {
+  devDeps: ['projen-github-action-typescript'],
+  actionMetadata: {
+    runs: {
+      main: 'dist/index.js',
+      using: RunsUsing.NODE_20,
+    },
     author: 'Rico Huijbers',
     inputs: {
       'github-token': {
@@ -51,4 +58,5 @@ const project = new actions.GitHubActionTypeScriptProject({
     },
   },
 });
+
 project.synth();
