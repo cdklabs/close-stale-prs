@@ -3,8 +3,8 @@
 name: close-stale-prs
 description: A GitHub Action for close-stale-prs
 runs:
-  using: node16
   main: dist/index.js
+  using: node20
 author: Rico Huijbers
 inputs:
   github-token:
