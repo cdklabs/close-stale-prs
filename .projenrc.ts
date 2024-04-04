@@ -3,6 +3,7 @@ import { GitHubActionTypeScriptProject, RunsUsing } from 'projen-github-action-t
 const project = new GitHubActionTypeScriptProject({
   projenrcTs: true,
   defaultReleaseBranch: 'main',
+  release: false,
   name: 'close-stale-prs',
   deps: ['@octokit/graphql'],
   devDeps: ['projen-github-action-typescript'],
