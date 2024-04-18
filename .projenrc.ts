@@ -7,6 +7,11 @@ const project = new GitHubActionTypeScriptProject({
   name: 'close-stale-prs',
   deps: ['@octokit/graphql'],
   devDeps: ['projen-github-action-typescript'],
+  autoApproveUpgrades: true,
+  autoApproveOptions: {
+    allowedUsernames: ['cdklabs-automation'],
+    secret: 'GITHUB_TOKEN',
+  },
   actionMetadata: {
     runs: {
       main: 'dist/index.js',
