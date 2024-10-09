@@ -3316,10 +3316,10 @@ pretty-format@^29.0.0, pretty-format@^29.7.0:
     ansi-styles "^5.0.0"
     react-is "^18.0.0"
 
-projen-github-action-typescript@^0.0.467:
-  version "0.0.467"
-  resolved "https://registry.yarnpkg.com/projen-github-action-typescript/-/projen-github-action-typescript-0.0.467.tgz#172563e36013b625961008365a04b14a2586bd6c"
-  integrity sha512-rQbA44o4s3ZGnfEiViEGy9/lASJLE/Z5R0nWnLgodn3vcrOhTcJIlx5wchHQg8tc2bI4JD8LdnxieqZOg7gJLQ==
+projen-github-action-typescript@^0.0.468:
+  version "0.0.468"
+  resolved "https://registry.yarnpkg.com/projen-github-action-typescript/-/projen-github-action-typescript-0.0.468.tgz#8dbb6928ae8471a0e68cbd2220a2b04e44dd116b"
+  integrity sha512-ae8NKMTUrtg/Ala4uAvUF6EmTEcBToUOSsiqKI4/E2l9F/QLh57jz9mIa6Gs5PwdoYtjYhjenwL7aRSbnQZTyA==
 
 projen@^0.88.1:
   version "0.88.1"
@@ -3831,9 +3831,9 @@ typed-array-length@^1.0.6:
     possible-typed-array-names "^1.0.0"
 
 typescript@^5.6.x:
-  version "5.6.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.6.2.tgz#d1de67b6bef77c41823f822df8f0b3bcff60a5a0"
-  integrity sha512-NW8ByodCSNCwZeghjN3o+JX5OFH0Ojg6sadjEKY4huZ52TqbJTJnDo5+Tw98lSy63NZvi4n+ez5m2u5d4PkZyw==
+  version "5.6.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.6.3.tgz#5f3449e31c9d94febb17de03cc081dd56d81db5b"
+  integrity sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==
 
 unbox-primitive@^1.0.2:
   version "1.0.2"
