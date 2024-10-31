@@ -29,8 +29,8 @@
     "eslint-plugin-import": "^2.31.0",
     "jest": "^29",
     "jest-junit": "^15",
-    "projen": "^0.88.9",
-    "projen-github-action-typescript": "^0.0.489",
+    "projen": "^0.89.0",
+    "projen-github-action-typescript": "^0.0.490",
     "ts-jest": "^29",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.x"
