@@ -96,8 +96,8 @@ export class StalePrFinder {
 
       const lastCommit = await this.lastCommit(pull.number);
       const lastNonWarningComment = await this.lastNonWarningComment(pull.number);
-      const lastActivity = new Date(Math.max(lastCommit?.getTime() ?? 0, lastNonWarningComment?.getTime() ?? 0))
-      
+      const lastActivity = new Date(Math.max(lastCommit?.getTime() ?? 0, lastNonWarningComment?.getTime() ?? 0));
+
       const hasMergeConflicts = (await this.client.rest.pulls.get({ ...this.repo, pull_number: pull.number })).data.mergeable_state === 'dirty';
 
       const changesRequested = reviewState?.state === 'changes_requested' ? reviewState : undefined;
