@@ -12,6 +12,7 @@ async function run() {
   const closeMessage: string = core.getInput('close-message');
   const closeLabel: string = core.getInput('close-label');
   const dryRun: boolean = core.getInput('dry-run') !== '';
+  const mergeConflictWarning: string = core.getInput('merge-conflict-warning');
 
   const finder = new StalePrFinder(token, {
     owner: github.context.repo.owner,
@@ -23,6 +24,7 @@ async function run() {
     warnMessage: warnMessage ? warnMessage : undefined,
     closeMessage: closeMessage ? closeMessage : undefined,
     closeLabel: closeLabel ? closeLabel : undefined,
+    mergeConflictWarning: mergeConflictWarning ? mergeConflictWarning : undefined,
     dryRun,
   });
 
