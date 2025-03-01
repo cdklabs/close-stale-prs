@@ -34,7 +34,7 @@
     "projen-github-action-typescript": "^0.0.513",
     "ts-jest": "^29",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.x"
+    "typescript": "^5.8.x"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
