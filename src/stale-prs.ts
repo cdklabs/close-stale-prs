@@ -93,7 +93,11 @@ export class StalePrFinder {
 
       const failingChecks = await this.failingChecks(pull.head.sha);
       const reviewState = await this.reviewState(pull.number);
+
       const lastCommit = await this.lastCommit(pull.number);
+      const lastNonWarningComment = await this.lastNonWarningComment(pull.number);
+      const lastActivity = new Date(Math.max(lastCommit?.getTime() ?? 0, lastNonWarningComment?.getTime() ?? 0));
+
       const hasMergeConflicts = (await this.client.rest.pulls.get({ ...this.repo, pull_number: pull.number })).data.mergeable_state === 'dirty';
 
       const changesRequested = reviewState?.state === 'changes_requested' ? reviewState : undefined;
@@ -110,6 +114,7 @@ export class StalePrFinder {
 
       console.log('        Changes requested:  ', changesRequested?.when?.toISOString() ?? '(no)');
       console.log(`        Last commit:         ${lastCommit?.toISOString()}`);
+      console.log(`        Last non warning comment:         ${lastNonWarningComment?.toISOString()}`);
       console.log(`        Merge conflicts:     ${hasMergeConflicts}`);
 
       // A PR has a problem if:
@@ -118,7 +123,7 @@ export class StalePrFinder {
       // - It has been in MERGE CONFLICTS for a given period.
       let stale: Stale | undefined;
 
-      if (reviewState && lastCommit
+      if (reviewState && lastActivity
         && this.stale(reviewState.when)) {
         this.metrics.staleDueToChangesRequested++;
         stale = {
@@ -132,13 +137,13 @@ export class StalePrFinder {
           since: buildFailTime,
         };
       } else if (hasMergeConflicts) {
-        if (lastCommit && this.stale(lastCommit)) {
+        if (lastActivity && this.stale(lastActivity)) {
           this.metrics.staleDueToMergeConflicts++;
           stale = {
             reason: 'MERGE CONFLICTS',
-            since: lastCommit,
+            since: lastActivity,
           };
-        } else if (lastCommit && this.mergeConflictWarningDays && this.olderThanDays(lastCommit, this.mergeConflictWarningDays)) {
+        } else if (lastActivity && this.mergeConflictWarningDays && this.olderThanDays(lastActivity, this.mergeConflictWarningDays)) {
           await this.addMergeConflictWarning(pull.number);
         }
       }
@@ -316,6 +321,25 @@ export class StalePrFinder {
     return labels
       .map(l => typeof l === 'string' ? l : l.name)
       .some(l => l && this.props.skipLabels?.includes(l));
+  }
+
+  private async lastNonWarningComment(pull_number: number): Promise<Date | undefined> {
+    const comments = await this.client.paginate(this.client.rest.issues.listComments, {
+      ...this.repo,
+      issue_number: pull_number,
+    });
+    comments.reverse();
+
+    for (const comment of comments) {
+      // If we see a comment that doesn't contain a warning, then its the last non-warning comment
+      for (const m of ['STALE PR', 'MERGE CONFLICTS'] as Marker[]) {
+        if (!comment.body?.includes(marker(m))) {
+          return new Date(comment.created_at);
+        }
+      }
+    }
+
+    return undefined;
   }
 
   /**
