@@ -1,6 +1,6 @@
 import * as github from '@actions/github';
 
-export type Marker = 'STALE PR' | 'MERGE CONFLICTS';
+export type Marker = 'STALE PR - CHANGES REQUESTED' | 'STALE PR - MERGE CONFLICTS' | 'STALE PR - BUILD FAILING';
 
 export interface StalePrFinderProps {
   readonly owner: string;
@@ -154,7 +154,7 @@ export class StalePrFinder {
         console.log('        Stale since:        ', stale.since.toISOString());
         console.log('        Warnings:           ', Object.fromEntries(warnings)); // Prints nicer
 
-        const warning = warnings.get('STALE PR');
+        const warning = warnings.get(`STALE PR - ${stale.reason}` as Marker);
         if (!warning || warning < stale.since) {
           // Beginning a new staleness period
           action = 'warn';
@@ -176,7 +176,7 @@ export class StalePrFinder {
         this.metrics.warned++;
         const message = this.props.warnMessage?.replace(/STATE/, stale?.reason ?? '') ?? `This PR has been in ${stale?.reason} for ${this.props.staleDays} days, and looks abandoned. It will be closed in ${this.props.responseDays} days if no further commits are pushed to it.`;
 
-        await this.addComment(pull_number, `${marker('STALE PR')}\n${message}`);
+        await this.addComment(pull_number, `${marker(`STALE PR - ${stale!.reason}` as Marker)}\n${message}`);
         return;
       }
       case 'close': {
@@ -331,7 +331,8 @@ export class StalePrFinder {
     const ret = new Map<Marker, Date>();
 
     for (const comment of comments) {
-      for (const m of ['STALE PR', 'MERGE CONFLICTS'] as Marker[]) {
+      for (const reason of ['CHANGES REQUESTED', 'MERGE CONFLICTS', 'BUILD FAILING']) {
+        const m = `STALE PR - ${reason}` as Marker;
         if (comment.body?.includes(marker(m)) && !ret.has(m)) {
           ret.set(m, new Date(comment.created_at));
         }
