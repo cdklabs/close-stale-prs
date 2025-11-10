@@ -143,22 +143,20 @@ export class StalePrFinder {
         }
       }
 
-      const warnings = await this.mostRecentWarnings(pull.number);
-
       console.log('        Stale:              ', stale ? `yes (${stale.reason})` : 'no');
 
       let action: Action = 'nothing';
       if (stale) {
         this.metrics.stalePrs++;
-
         console.log('        Stale since:        ', stale.since.toISOString());
-        console.log('        Warnings:           ', Object.fromEntries(warnings)); // Prints nicer
 
-        const warning = warnings.get(`STALE PR - ${stale.reason}` as Marker);
-        if (!warning || warning < stale.since) {
-          // Beginning a new staleness period
+        const latestWarning = await this.getLatestWarning(pull.number);
+        console.log('        Latest warning:            ', latestWarning ? `${latestWarning.marker} at ${latestWarning.when.toISOString()}` : 'none');
+
+        const currentMarker = `STALE PR - ${stale.reason}` as Marker;
+        if (!latestWarning || latestWarning.marker !== currentMarker || latestWarning.when < stale.since) {
           action = 'warn';
-        } else if (warnings && this.outOfGracePeriod(warning)) {
+        } else if (latestWarning && this.outOfGracePeriod(latestWarning.when)) {
           // Time to close
           action = 'close';
         }
@@ -319,27 +317,27 @@ export class StalePrFinder {
   }
 
   /**
-   * List the comments and find the last time we marked this PR as stale.
+   * Get the latest warning where we marked this PR as stale.
    */
-  private async mostRecentWarnings(pull_number: number): Promise<Map<Marker, Date>> {
+  private async getLatestWarning(pull_number: number): Promise<Warning | undefined> {
     const comments = await this.client.paginate(this.client.rest.issues.listComments, {
       ...this.repo,
       issue_number: pull_number,
     });
     comments.reverse();
 
-    const ret = new Map<Marker, Date>();
-
     for (const comment of comments) {
       for (const reason of ['CHANGES REQUESTED', 'MERGE CONFLICTS', 'BUILD FAILING']) {
         const m = `STALE PR - ${reason}` as Marker;
-        if (comment.body?.includes(marker(m)) && !ret.has(m)) {
-          ret.set(m, new Date(comment.created_at));
+        if (comment.body?.includes(marker(m))) {
+          return {
+            marker: m,
+            when: new Date(comment.created_at),
+          };
         }
       }
     }
-
-    return ret;
+    return undefined;
   }
 }
 
@@ -362,6 +360,11 @@ interface FailedCheck {
 interface Stale {
   readonly reason: string;
   readonly since: Date;
+}
+
+interface Warning {
+  readonly marker: Marker;
+  readonly when: Date;
 }
 
 function mostRecent<A extends object, K extends keyof A, T extends keyof A>(xs: A[], idKey: K, timeKey: T):
