@@ -327,16 +327,15 @@ export class StalePrFinder {
     comments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     for (const comment of comments) {
-      console.log(`${comment.user?.login} -- ${new Date(comment.created_at).toISOString()}`);
-      // for (const reason of ['CHANGES REQUESTED', 'MERGE CONFLICTS', 'BUILD FAILING']) {
-      //   // const m = `STALE PR - ${reason}` as Marker;
-      //   // // if (comment.body?.includes(marker(m))) {
-      //   // //   // return {
-      //   // //   //   marker: m,
-      //   // //   //   when: new Date(comment.created_at),
-      //   // //   // };
-      //   // // }
-      // }
+      for (const reason of ['CHANGES REQUESTED', 'MERGE CONFLICTS', 'BUILD FAILING']) {
+        const m = `STALE PR - ${reason}` as Marker;
+        if (comment.body?.includes(marker(m))) {
+          return {
+            marker: m,
+            when: new Date(comment.created_at),
+          };
+        }
+      }
     }
     return undefined;
   }
