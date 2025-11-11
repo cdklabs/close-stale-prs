@@ -1,6 +1,6 @@
 import * as github from '@actions/github';
 
-export type Marker = 'STALE PR' | 'MERGE CONFLICTS';
+export type Marker = 'STALE PR - CHANGES REQUESTED' | 'STALE PR - MERGE CONFLICTS' | 'STALE PR - BUILD FAILING';
 
 export interface StalePrFinderProps {
   readonly owner: string;
@@ -143,22 +143,20 @@ export class StalePrFinder {
         }
       }
 
-      const warnings = await this.mostRecentWarnings(pull.number);
-
       console.log('        Stale:              ', stale ? `yes (${stale.reason})` : 'no');
 
       let action: Action = 'nothing';
       if (stale) {
         this.metrics.stalePrs++;
-
         console.log('        Stale since:        ', stale.since.toISOString());
-        console.log('        Warnings:           ', Object.fromEntries(warnings)); // Prints nicer
 
-        const warning = warnings.get('STALE PR');
-        if (!warning || warning < stale.since) {
-          // Beginning a new staleness period
+        const latestWarning = await this.getLatestWarning(pull.number);
+        console.log('        Latest warning:            ', latestWarning ? `${latestWarning.marker} at ${latestWarning.when.toISOString()}` : 'none');
+
+        const currentMarker = `STALE PR - ${stale.reason}` as Marker;
+        if (!latestWarning || latestWarning.marker !== currentMarker || latestWarning.when < stale.since) {
           action = 'warn';
-        } else if (warnings && this.outOfGracePeriod(warning)) {
+        } else if (latestWarning && this.outOfGracePeriod(latestWarning.when)) {
           // Time to close
           action = 'close';
         }
@@ -176,7 +174,7 @@ export class StalePrFinder {
         this.metrics.warned++;
         const message = this.props.warnMessage?.replace(/STATE/, stale?.reason ?? '') ?? `This PR has been in ${stale?.reason} for ${this.props.staleDays} days, and looks abandoned. It will be closed in ${this.props.responseDays} days if no further commits are pushed to it.`;
 
-        await this.addComment(pull_number, `${marker('STALE PR')}\n${message}`);
+        await this.addComment(pull_number, `${marker(`STALE PR - ${stale!.reason}` as Marker)}\n${message}`);
         return;
       }
       case 'close': {
@@ -319,26 +317,27 @@ export class StalePrFinder {
   }
 
   /**
-   * List the comments and find the last time we marked this PR as stale.
+   * Get the latest warning where we marked this PR as stale.
    */
-  private async mostRecentWarnings(pull_number: number): Promise<Map<Marker, Date>> {
+  private async getLatestWarning(pull_number: number): Promise<Warning | undefined> {
     const comments = await this.client.paginate(this.client.rest.issues.listComments, {
       ...this.repo,
       issue_number: pull_number,
     });
-    comments.reverse();
-
-    const ret = new Map<Marker, Date>();
+    comments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     for (const comment of comments) {
-      for (const m of ['STALE PR', 'MERGE CONFLICTS'] as Marker[]) {
-        if (comment.body?.includes(marker(m)) && !ret.has(m)) {
-          ret.set(m, new Date(comment.created_at));
+      for (const reason of ['CHANGES REQUESTED', 'MERGE CONFLICTS', 'BUILD FAILING']) {
+        const m = `STALE PR - ${reason}` as Marker;
+        if (comment.body?.includes(marker(m))) {
+          return {
+            marker: m,
+            when: new Date(comment.created_at),
+          };
         }
       }
     }
-
-    return ret;
+    return undefined;
   }
 }
 
@@ -361,6 +360,11 @@ interface FailedCheck {
 interface Stale {
   readonly reason: string;
   readonly since: Date;
+}
+
+interface Warning {
+  readonly marker: Marker;
+  readonly when: Date;
 }
 
 function mostRecent<A extends object, K extends keyof A, T extends keyof A>(xs: A[], idKey: K, timeKey: T):
